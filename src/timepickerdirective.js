@@ -40,6 +40,9 @@ m.directive('uiTimepicker', ['uiTimepickerConfig', '$parse', '$window', function
                 if (!angular.isDefined(date)) {
                     return;
                 }
+                if (typeof(date) == "number") {
+                    date = new Date(date*1000);
+                }
                 if (date !== null && date !== '' && !isDateOrMoment(date)) {
                     throw new Error('ng-Model value must be a Date or Moment object - currently it is a ' + typeof date + '.');
                 }
@@ -48,9 +51,6 @@ m.directive('uiTimepicker', ['uiTimepickerConfig', '$parse', '$window', function
                 }
                 if (!element.is(':focus') && !invalidInput()) {
                     element.timepicker('setTime', date);
-                }
-                if(date === null){
-                    resetInput();
                 }
             };
 
@@ -68,10 +68,6 @@ m.directive('uiTimepicker', ['uiTimepickerConfig', '$parse', '$window', function
                 )
             );
 
-            var resetInput = function(){
-                element.timepicker('setTime', null);
-            };
-
             var userInput = function() {
                 return element.val().trim();
             };
@@ -83,6 +79,15 @@ m.directive('uiTimepicker', ['uiTimepickerConfig', '$parse', '$window', function
             element.on('$destroy', function() {
                 element.timepicker('remove');
             });
+
+            var dateToSeconds = function(date) {
+                if (!date)
+                    return 0
+                return  (date.getHours() * 3600) + 
+                        (date.getMinutes() * 60) + 
+                        date.getSeconds()
+                
+            }
 
             var asDate = function() {
                 var baseDate = ngModel.$modelValue ? ngModel.$modelValue : scope.baseDate;
@@ -96,15 +101,17 @@ m.directive('uiTimepicker', ['uiTimepickerConfig', '$parse', '$window', function
             if (element.is('input')) {
                 ngModel.$parsers.unshift(function(viewValue) {
                     var date = element.timepicker('getTime', asDate());
-                    return date ? asMomentOrDate(date) : date;
+                    // console.log(1, date)
+                    return dateToSeconds(date ? asMomentOrDate(date) : date);
                 });
-                ngModel.$validators.time = function(modelValue) {
-                    return (!attrs.required && !userInput()) ? true : isDateOrMoment(modelValue);
-                };
+                // ngModel.$validators.time = function(modelValue) {
+                //     return (!attrs.required && !userInput()) ? true : isDateOrMoment(modelValue);
+                // };
             } else {
                 element.on('changeTime', function() {
                     scope.$evalAsync(function() {
-                        var date = element.timepicker('getTime', asDate());
+                        var date = dateToSeconds(element.timepicker('getTime', asDate()));
+                        console.log(date)
                         ngModel.$setViewValue(date);
                     });
                 });
