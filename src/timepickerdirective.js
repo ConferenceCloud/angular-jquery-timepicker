@@ -43,6 +43,9 @@ m.directive('uiTimepicker', ['uiTimepickerConfig', '$parse', '$window', function
                 if (typeof(date) == "number") {
                     date = new Date(date*1000);
                 }
+                if (typeof date == "string") {
+                    date = new Date("01/01/01 " + date)
+                }
                 if (date !== null && date !== '' && !isDateOrMoment(date)) {
                     throw new Error('ng-Model value must be a Date or Moment object - currently it is a ' + typeof date + '.');
                 }
